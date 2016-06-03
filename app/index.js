@@ -8,6 +8,6 @@ app.use(function (req, res) {
 	res.status(200).send('It\'s working');
 });
 
-app.listen(3000, function () {
+app.listen((process.env.PORT || 3000), function () {
 	console.log('App is listening on 3000');
 });
