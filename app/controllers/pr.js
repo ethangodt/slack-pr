@@ -11,7 +11,9 @@ function getPRData (req, res) {
 
 	github.pullRequests.get({ user, repo, number }, function (err, pullData) {
 		github.issues.get({user, repo, number}, function (err, issueData) {
-			res.status(200).json({
+			res.setHeader('Content-Type', 'application/json');
+			res.status(200);
+			res.send(JSON.stringify({
 				...slackFormatter.pr({
 					author_name: pullData.user.login,
 					author_icon: pullData.user.avatar_url,
@@ -23,7 +25,7 @@ function getPRData (req, res) {
 					branch: pullData.base.ref,
 					labels: issueData.labels.map(issue => issue.name),
 				})
-			});
+			}));
 		});
 	});
 }

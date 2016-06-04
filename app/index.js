@@ -13,6 +13,8 @@ if (config.dev_mode) {
 }
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }))
+
 app.use(sslHealthCheck);
 app.use(function (req, res, next) {
 	console.log('from config', config.prSlashToken);
