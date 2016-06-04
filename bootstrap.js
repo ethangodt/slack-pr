@@ -1,6 +1,7 @@
-// bootstrap file
+// bootstrap thingz
 require('babel-register');
 require('babel-polyfill');
+require('dotenv').config({ silent: true });
 
 // start the app
 require('./app/');
