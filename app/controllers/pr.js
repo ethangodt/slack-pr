@@ -1,36 +1,59 @@
 import github from './github';
+import subscription from './../controllers/subscription';
 import slackFormatter from '../utils/slackFormatter';
-import parse from 'url-parse';
+import chunkPRUrl from '../utils/chunkPRUrl';
 
-function getPRData (req, res) {
-	const url = parse(req.body.text);
-	const chunkedPathname = url.pathname.split('/').slice(1);
-	const user = chunkedPathname[0];
-	const repo = chunkedPathname[1];
-	const number = chunkedPathname[3];
+function skipToSubChain (req, res, next) {
+	const args = req.body.text.split(' ');
+	if (args.includes('sub')) {
+		next('route');
+	} else {
+		next();
+	}
+}
 
-	github.pullRequests.get({ user, repo, number }, function (err, pullData) {
-		github.issues.get({user, repo, number}, function (err, issueData) {
-			res.setHeader('Content-Type', 'application/json');
-			res.status(200);
-			res.send(JSON.stringify({
+function getPRData (req, res, next) {
+	const PRInfo = chunkPRUrl(req.body.text);
+	github.api.pullRequests.get(PRInfo, function (err, pull) {
+		github.api.issues.get(PRInfo, function (err, issue) {
+			res.json({
 				...slackFormatter.pr({
-					author_name: pullData.user.login,
-					author_icon: pullData.user.avatar_url,
-					title: pullData.title,
-					title_link: pullData.html_url,
-					number: pullData.number,
-					orgOrUser: pullData.base.user.login,
-					repo: pullData.base.repo.name,
-					branch: pullData.base.ref,
-					labels: issueData.labels.map(issue => issue.name),
+					author_name: pull.user.login,
+					author_icon: pull.user.avatar_url,
+					title: pull.title,
+					title_link: pull.html_url,
+					number: pull.number,
+					orgOrUser: pull.base.user.login,
+					repo: pull.base.repo.name,
+					branch: pull.base.ref,
+					labels: issue.labels.map(issue => issue.name),
 				})
-			}));
+			});
+		});
+	});
+}
+
+function setupSubscription (req, res, next) {
+	const url = req.body.text.split(' ')[1];
+	const PRInfo = chunkPRUrl(url);
+	github.upsertWebHook(PRInfo.user, PRInfo.repo, function (err, hook) {
+		github.api.issues.get(PRInfo, function (err, issue) {
+			const sub = {
+				userID: 12345,
+				username: 'ethangodt',
+				issueID: issue.id,
+			};
+			subscription.upsert(sub, function (err, doc) {
+				res.json({
+					...slackFormatter.subSuccess(issue.number)
+				})
+			})
 		});
 	});
 }
 
 export default {
-	getPRData
+	getPRData,
+	skipToSubChain,
+	setupSubscription,
 };
-
