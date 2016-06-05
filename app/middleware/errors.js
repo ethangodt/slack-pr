@@ -1,3 +1,5 @@
+import slackFormatter from '../utils/slackFormatter';
+
 // logs the errors
 function logger (err, req, res, next) {
 	console.error(err);
@@ -5,11 +7,14 @@ function logger (err, req, res, next) {
 }
 
 // catch all error handler
-function catchAll (err, req, res) {
-	res.status(500).send(err.message);
+function generalHandler (err, req, res) {
+	// the specific error messasge if the error has client = true
+	// or some default slack error message
+	const message = err.forClient && err.message;
+	res.status(500).json(slackFormatter.error(message));
 }
 
 module.exports = {
 	logger,
-	catchAll
+	generalHandler
 };

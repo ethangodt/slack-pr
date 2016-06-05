@@ -1,4 +1,4 @@
-import pr from '../../controllers/pr';
+import pr from '../../handlers/pr';
 import slackAuth from '../../middleware/slackAuth';
 import { Router } from 'express';
 const router = Router();

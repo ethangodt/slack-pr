@@ -9,9 +9,6 @@ function findAllWebHooks (userOrOrg, repo, cb) {
 		password: config.githubPassword,
 	});
 	github.repos.getHooks({ user: userOrOrg, repo }, function (err, hooks) {
-		if (err) {
-			console.error(err);
-		}
 		cb(err, hooks);
 	})
 }
@@ -27,6 +24,10 @@ function addWebHook (userOrOrg, repo, cb) {
 		user: userOrOrg,
 		repo,
 		name: 'web',
+		events: [
+			'issue_comment',
+			'pull_request_review_comment',
+		],
 		config: {
 			content_type: "json",
 			insecure_ssl: "1", // does this matter at all internally?
@@ -37,9 +38,6 @@ function addWebHook (userOrOrg, repo, cb) {
 	};
 
 	github.repos.createHook(hookData, function (err, newHook) {
-		if (err) {
-			console.error(err);
-		}
 		cb(err, newHook);
 	})
 }
@@ -47,14 +45,23 @@ function addWebHook (userOrOrg, repo, cb) {
 // "upsert" web hook
 function upsertWebHook (userOrOrg, repo, cb) {
 	findAllWebHooks(userOrOrg, repo, function (err, hooks) {
-		// todo add 404 error for no permission
+		if (err) {
+			cb(err, hooks);
+			return;
+		}
+
 		const ourHook = hooks.find(hook => hook.config.url === config.host + '/webhooks/github');
 		if (!ourHook) {
 			addWebHook(userOrOrg, repo, function (err, newHook) {
-				cb(newHook);
+				if (err) {
+					cb(err, newHook);
+					return;
+				}
+
+				cb(err, newHook);
 			})
 		} else {
-			cb(ourHook)
+			cb(err, ourHook)
 		}
 	});
 }

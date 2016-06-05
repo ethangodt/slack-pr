@@ -2,7 +2,9 @@ import config from '../config';
 
 function prSlash (req, res, next) {
 	if (req.body.token !== config.prSlashToken) {
-		next(new Error('The /pr Slack token is incorrect'));
+		const error = new Error('The Slack token for the /pr slash command is incorrect');
+		error.forClient = true;
+		next(error);
 	}
 	next();
 }
