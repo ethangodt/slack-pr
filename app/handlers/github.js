@@ -8,7 +8,7 @@ function notifySubscribers (req, res, next) {
 	const event = (req.body.issue) ? 'issue' : 'pull_request';
 	try {
 		var comment = {
-			issueID: req.body[event].id,
+			pullRequestURL: (event === 'issue') ? req.body.issue.pull_request.html_url : req.body.pull_request.html_url,
 			author_name: req.body.comment.user.login,
 			author_icon: req.body.comment.user.avatar_url,
 			title: req.body[event].title,
@@ -21,7 +21,7 @@ function notifySubscribers (req, res, next) {
 		return;
 	}
 
-	subscription.findAllByIssue(comment.issueID, function (err, recipients) {
+	subscription.findAllByIssue(comment.pullRequestURL, function (err, recipients) {
 		if (err) {
 			console.error('DB error searching for subscriptions');
 			res.end();

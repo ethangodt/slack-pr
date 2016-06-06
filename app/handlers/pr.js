@@ -51,22 +51,22 @@ function setupSubscription (req, res, next) {
 	const PRInfo = chunkPRUrl(url);
 	github.upsertWebHook(PRInfo.user, PRInfo.repo, function (err, hook) {
 		if (err) {
-			const pullError = new Error('GitHub error on pull request. Could be authentication or could not exist.');
-			next(pullError);
+			const hookError = new Error('GitHub error on upserting web hook.');
+			next(hookError);
 			return;
 		}
 
-		github.api.issues.get(PRInfo, function (err, issue) {
+		github.api.pullRequests.get(PRInfo, function (err, pull) {
 			if (err) {
-				const issueError = new Error('GitHub error on issue. Probably a really weird error.');
-				next(issueError);
+				const pullError = new Error('GitHub error on pull request. Probably a really weird error.');
+				next(pullError);
 				return;
 			}
 
 			const sub = {
 				userID: req.body.user_id,
 				username: req.body.user_name,
-				issueID: issue.id,
+				pullRequestURL: pull.html_url,
 			};
 
 			subscription.upsert(sub, function (err, doc) {
@@ -78,7 +78,7 @@ function setupSubscription (req, res, next) {
 				}
 
 				res.json({
-					...slackFormatter.subSuccess(issue.number)
+					...slackFormatter.subSuccess(pull.number)
 				})
 			})
 		});

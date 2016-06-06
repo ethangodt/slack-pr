@@ -1,7 +1,7 @@
 import Subscription from '../model/subscription';
 
-function findAllByIssue (issueID, cb) {
-	Subscription.find({ issueID }, function (err, docs) {
+function findAllByIssue (pullRequestURL, cb) {
+	Subscription.find({ pullRequestURL }, function (err, docs) {
 		if (err) {
 			console.error(err);
 		}
@@ -9,8 +9,8 @@ function findAllByIssue (issueID, cb) {
 	})
 }
 
-function upsert (subInfo, cb) {
-	Subscription.findOneAndUpdate(subInfo, subInfo, { new: true, upsert: true }, function (err, doc) {
+function upsert (sub, cb) {
+	Subscription.findOneAndUpdate(sub, sub, { new: true, upsert: true }, function (err, doc) {
 		if (err) {
 			console.error(err);
 		}
